@@ -6,12 +6,12 @@ import { useState } from "react";
 
 const pageStyles =  {
   color: "#232129",
-  padding: 96,
+  paddingTop: "1rem",
   fontFamily: "-apple-system, Roboto, sans-serif, serif",
 }
 const headingStyles = {
   marginTop: 0,
-  marginBottom: 64,
+  marginBottom: 10,
   maxWidth: 320,
 }
 const InputContainer = styled.div `
@@ -29,6 +29,9 @@ const TextArea = styled.textarea `
 const PoemTextArea = styled(TextArea) `
   background: none;
   padding-left: 30px;
+  overflow-x: scroll;
+  white-space: nowrap;
+  font-size: 11px;
 `
 
 const NumberingArea = styled.div `
@@ -40,7 +43,9 @@ const NumberingArea = styled.div `
   font-family: monospace;
   margin-top: 2px;
   margin-left: 3px;
-`
+  font-size: 11px;
+`;
+
 function mode(arr:number[]){
   return arr.sort((a,b) =>
         arr.filter(v => v===a).length
@@ -88,7 +93,7 @@ const IndexPage: React.FC<PageProps> = () => {
         Poem Tools
       </h1>
       <select onChange={(e) => { let newLang = languages[parseInt(e.target.value)]; setLang(newLang); setPoem(getSyllables(poem.text, newLang.pattern));} }>
-        {languages.map((l,i) => <option value={i}>{l.name}</option>)}
+        {languages.map((l,i) => <option value={i} key={l.code}>{l.name}</option>)}
       </select>
       <InputContainer>
         <NumberingArea>{poem.syllables.map((s, i) => poem.lines[i] == "" ? <div>&nbsp;</div> : <div style={{color: poem.syllables[i] == poem.modeLength ? "darkgrey" : "red"}}>{s}</div>)}</NumberingArea>
