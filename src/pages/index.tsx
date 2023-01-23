@@ -47,18 +47,26 @@ const median = (arr:number[]):number => {
   return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
 };
 
+function mode(arr:number[]){
+  return arr.sort((a,b) =>
+        arr.filter(v => v===a).length
+      - arr.filter(v => v===b).length
+  ).pop() || 0;
+}
+
+
 const getSyllables = (text:string) =>
 {
   let pattern = /[aáeéiíoóöőuúüű]/gi
   let list = text.split("\n");
   let syllables = list.map(line => line.match(pattern)?.length || 0);
-  let medianLength = median(syllables.filter(s => s > 0));
-  return {lines:list, syllables:syllables, medianLength:medianLength};
+  let modeLength = mode(syllables.filter(s => s > 0));
+  return {lines:list, syllables:syllables, modeLength:modeLength};
 }
 
 const IndexPage: React.FC<PageProps> = () => {
 
-  const [poem, setPoem] = useState<{value:string|null, lines:string[], syllables: number[], medianLength:number}>({value: null, lines: [], syllables: [], medianLength:0});
+  const [poem, setPoem] = useState<{value:string|null, lines:string[], syllables: number[], modeLength:number}>({value: null, lines: [], syllables: [], modeLength:0});
 
   if (poem.value === null && typeof window !== "undefined")
   {
@@ -80,7 +88,7 @@ const IndexPage: React.FC<PageProps> = () => {
         Poem Tools
       </h1>
       <InputContainer>
-        <NumberingArea>{poem.syllables.map((s, i) => poem.lines[i] == "" ? <div>&nbsp;</div> : <div style={{color: poem.syllables[i] == poem.medianLength ? "darkgrey" : "red"}}>{s}</div>)}</NumberingArea>
+        <NumberingArea>{poem.syllables.map((s, i) => poem.lines[i] == "" ? <div>&nbsp;</div> : <div style={{color: poem.syllables[i] == poem.modeLength ? "darkgrey" : "red"}}>{s}</div>)}</NumberingArea>
         <PoemTextArea value={poem.value} onChange={onChange}></PoemTextArea>
       </InputContainer>
     </main>
