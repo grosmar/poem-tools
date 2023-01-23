@@ -44,7 +44,7 @@ const IndexPage: React.FC<PageProps> = () => {
 
   const [poem, setPoem] = useState<{value:string|null, lines:string[], syllables: number[]}>({value: null, lines: [], syllables: []});
 
-  if (poem.value === null && typeof window != undefined)
+  if (poem.value === null && typeof window !== "undefined")
   {
     let text = window.localStorage.getItem("poem") || ""; 
     setPoem( {value:text, ...getSyllables(text)} );
