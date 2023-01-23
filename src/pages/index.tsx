@@ -8,6 +8,8 @@ const pageStyles =  {
   color: "#232129",
   paddingTop: "1rem",
   fontFamily: "-apple-system, Roboto, sans-serif, serif",
+  maxWidth: "1000px",
+  margin: "auto"
 }
 const headingStyles = {
   marginTop: 0,
