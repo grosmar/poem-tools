@@ -41,12 +41,6 @@ const NumberingArea = styled.div `
   margin-top: 2px;
   margin-left: 3px;
 `
-const median = (arr:number[]):number => {
-  const mid = Math.floor(arr.length / 2),
-    nums = [...arr].sort((a, b) => a - b);
-  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
-};
-
 function mode(arr:number[]){
   return arr.sort((a,b) =>
         arr.filter(v => v===a).length
@@ -54,42 +48,51 @@ function mode(arr:number[]){
   ).pop() || 0;
 }
 
+type Language = {code:string, name:string, pattern:RegExp};
 
-const getSyllables = (text:string) =>
+const languages:Language[] = [
+  { code: "en", name: "English", pattern: /(?:ea)|(?:oo)|[aáeéiíoóöőuúüű]/gi},
+  { code: "hu", name: "Hungarian", pattern: /[aáeéiíoóöőuúüű]/gi}
+];
+
+const getSyllables = (text:string, pattern:RegExp) =>
 {
-  let pattern = /[aáeéiíoóöőuúüű]/gi
   let list = text.split("\n");
   let syllables = list.map(line => line.match(pattern)?.length || 0);
   let modeLength = mode(syllables.filter(s => s > 0));
-  return {lines:list, syllables:syllables, modeLength:modeLength};
+  return {text:text, lines:list, syllables:syllables, modeLength:modeLength};
 }
 
 const IndexPage: React.FC<PageProps> = () => {
 
-  const [poem, setPoem] = useState<{value:string|null, lines:string[], syllables: number[], modeLength:number}>({value: null, lines: [], syllables: [], modeLength:0});
+  const [poem, setPoem] = useState<{text:string, lines:string[], syllables: number[], modeLength:number}>({text: "__UNINITED__", lines: [], syllables: [], modeLength:0});
+  const [lang, setLang] = useState<Language>(languages[0]);
 
-  if (poem.value === null && typeof window !== "undefined")
+  if (poem.text === "__UNINITED__" && typeof window !== "undefined")
   {
     let text = window.localStorage.getItem("poem") || ""; 
-    setPoem( {value:text, ...getSyllables(text)} );
+    setPoem( getSyllables(text, lang.pattern) );
+    setLang( languages[parseInt(window.localStorage.getItem("lang") || "0")] );
   }
 
   const onChange = (e:ChangeEvent<HTMLTextAreaElement>) =>
   {
     let text = e.target.value;
-    console.log(getSyllables(text));
-    setPoem({value: text, ...getSyllables(text)});
+    setPoem(getSyllables(text, lang.pattern));
     window.localStorage.setItem("poem", text);
   }
-  console.log(poem.syllables.map((s, i) => poem.lines[i] == "" ? s : s).join("\n"));
+  
   return (
     <main style={pageStyles}>
       <h1 style={headingStyles}>
         Poem Tools
       </h1>
+      <select onChange={(e) => { let newLang = languages[parseInt(e.target.value)]; setLang(newLang); setPoem(getSyllables(poem.text, newLang.pattern));} }>
+        {languages.map((l,i) => <option value={i}>{l.name}</option>)}
+      </select>
       <InputContainer>
         <NumberingArea>{poem.syllables.map((s, i) => poem.lines[i] == "" ? <div>&nbsp;</div> : <div style={{color: poem.syllables[i] == poem.modeLength ? "darkgrey" : "red"}}>{s}</div>)}</NumberingArea>
-        <PoemTextArea value={poem.value} onChange={onChange}></PoemTextArea>
+        <PoemTextArea value={poem.text} onChange={onChange}></PoemTextArea>
       </InputContainer>
     </main>
   )
