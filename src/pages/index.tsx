@@ -89,8 +89,9 @@ const IndexPage: React.FC<PageProps> = () => {
   if (poem.text === "__UNINITED__" && typeof window !== "undefined")
   {
     let text = window.localStorage.getItem("poem") || ""; 
-    setPoem( getSyllables(text, lang.matcher) );
-    setLang( languages[parseInt(window.localStorage.getItem("lang") || "0")] );
+    let newLang = languages[parseInt(window.localStorage.getItem("lang") || "0")];
+    setPoem( getSyllables(text, newLang.matcher) );
+    setLang( newLang );
   }
 
   const onChange = (e:ChangeEvent<HTMLTextAreaElement>) =>
