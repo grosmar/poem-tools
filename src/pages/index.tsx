@@ -3,6 +3,7 @@ import type { HeadFC, PageProps } from "gatsby"
 import { ChangeEvent } from "react"
 import styled from "styled-components";
 import { useState } from "react";
+import {syllable} from 'syllable';
 
 const pageStyles =  {
   color: "#232129",
@@ -55,17 +56,27 @@ function mode(arr:number[]){
   ).pop() || 0;
 }
 
-type Language = {code:string, name:string, pattern:RegExp};
+type Language = {code:string, name:string, matcher:(text:string)=>number};
 
 const languages:Language[] = [
-  { code: "en", name: "English", pattern: /(?:ea)|(?:oo)|[aáeéiíoóöőuúüű]/gi},
-  { code: "hu", name: "Hungarian", pattern: /[aáeéiíoóöőuúüű]/gi}
+  { code: "en", name: "English", matcher:(text:string) => {
+      //(?:ea)|(?:oo)|[aáeéiíoóöőuúüű]/gi
+      console.log(text.split(/[^\p{L}]/gmu));
+      return text.split(/[^\p{L}]/gmu)
+      .map(word => syllable(word))
+      .reduce((acc, curr) => acc + curr, 0)
+    }
+  },
+  { code: "hu", name: "Hungarian", matcher:(text:string) => { 
+      return text.match(/[aáeéiíoóöőuúüű]/gi)?.length || 0;
+    }
+  }
 ];
 
-const getSyllables = (text:string, pattern:RegExp) =>
+const getSyllables = (text:string, matcher:(text:string)=>number) =>
 {
   let list = text.split("\n");
-  let syllables = list.map(line => line.match(pattern)?.length || 0);
+  let syllables = list.map(line => matcher(line));
   let modeLength = mode(syllables.filter(s => s > 0));
   return {text:text, lines:list, syllables:syllables, modeLength:modeLength};
 }
@@ -78,24 +89,32 @@ const IndexPage: React.FC<PageProps> = () => {
   if (poem.text === "__UNINITED__" && typeof window !== "undefined")
   {
     let text = window.localStorage.getItem("poem") || ""; 
-    setPoem( getSyllables(text, lang.pattern) );
+    setPoem( getSyllables(text, lang.matcher) );
     setLang( languages[parseInt(window.localStorage.getItem("lang") || "0")] );
   }
 
   const onChange = (e:ChangeEvent<HTMLTextAreaElement>) =>
   {
     let text = e.target.value;
-    setPoem(getSyllables(text, lang.pattern));
+    setPoem(getSyllables(text, lang.matcher));
     window.localStorage.setItem("poem", text);
   }
   
+  const onChangeLang = (langIndex:number) =>
+  {
+    let newLang = languages[langIndex]; 
+    setLang(newLang); 
+    setPoem(getSyllables(poem.text, newLang.matcher));
+    window.localStorage.setItem("lang", langIndex.toString());
+  }
+
   return (
     <main style={pageStyles}>
       <h1 style={headingStyles}>
         Poem Tools
       </h1>
-      <select onChange={(e) => { let newLang = languages[parseInt(e.target.value)]; setLang(newLang); setPoem(getSyllables(poem.text, newLang.pattern));} }>
-        {languages.map((l,i) => <option value={i} key={l.code}>{l.name}</option>)}
+      <select onChange={(e) => onChangeLang(parseInt(e.target.value)) }>
+        {languages.map((l,i) => <option value={i} key={l.code} selected={languages[i] == lang}>{l.name}</option>)}
       </select>
       <InputContainer>
         <NumberingArea>{poem.syllables.map((s, i) => poem.lines[i] == "" ? <div>&nbsp;</div> : <div style={{color: poem.syllables[i] == poem.modeLength ? "darkgrey" : "red"}}>{s}</div>)}</NumberingArea>
