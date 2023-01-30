@@ -61,8 +61,7 @@ type Language = {code:string, name:string, matcher:(text:string)=>number};
 const languages:Language[] = [
   { code: "en", name: "English", matcher:(text:string) => {
       //(?:ea)|(?:oo)|[aáeéiíoóöőuúüű]/gi
-      console.log(text.split(/[^\p{L}]/gmu));
-      return text.split(/[^\p{L}]/gmu)
+      return text.split(/[^\p{L}']/gmu)
       .map(word => syllable(word))
       .reduce((acc, curr) => acc + curr, 0)
     }
